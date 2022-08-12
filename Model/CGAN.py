@@ -5,9 +5,7 @@ import os
 import numpy as np
 import torch 
 import torch.nn as nn
-import torch.utils.data as data
 import torch.nn.functional as F
-from torch.autograd import Variable
 
 torch.manual_seed(42)
 np.random.seed(42)
@@ -75,16 +73,13 @@ class Generator(nn.Module):
         
         self.regular = nn.Upsample(size=self.Ihb_size, mode='trilinear', align_corners=False)
         
-    def forward(self, x, epoch, window=300):
+    def forward(self, x):
 
         feature_1 = self.left_conv_1(x)        
         feature_2 = self.left_conv_2(feature_1)
         feature_3 = self.left_conv_3(feature_2)
         feature_4 = self.left_conv_4(feature_3)
         
-        if epoch==-1:
-            CNN_plot(feature_4, "Encoder", window)
-
         out = self.deconv_1(feature_4)
         out = torch.cat((feature_3, out), dim=1)
         out = self.right_conv_1(out)
@@ -96,9 +91,6 @@ class Generator(nn.Module):
         out = self.deconv_3(out)
         out = torch.cat((feature_1, out), dim=1)
         out = self.right_conv_3(out)
-
-        if epoch==-1:
-            CNN_plot(out, "Decoder", window)
 
         out = self.deconv_4(out)
         return self.regular(out)

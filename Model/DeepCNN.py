@@ -5,7 +5,6 @@ import os
 import numpy as np
 import torch 
 import torch.nn as nn
-import torch.utils.data as data
 import torch.nn.functional as F
 
 torch.manual_seed(42)
@@ -26,11 +25,11 @@ class BasicBlock(nn.Module):
             nn.Conv3d(out_channels, out_channels, kernel_size=kernel_size, stride=1, 
                       padding=int(kernel_size//2), padding_mode='replicate', bias=bias),)
         
-        self.shortcut = nn.Sequential()
-        if in_channels != out_channels:
-            self.shortcut = nn.Sequential(
-                nn.Conv3d(in_channels, out_channels, kernel_size=1, stride=1, bias=False),)
-            
+        self.shortcut = nn.Sequential(nn.Conv3d(in_channels, out_channels, kernel_size=1, padding_mode='replicate',
+                                     stride=1, bias=False),) if in_channels != out_channels else None
+        
+        self.activ = nn.LeakyReLU(inplace=True)
+        
     def init(self):
         for m in self.children():
             if isinstance(m, nn.Sequential):
@@ -41,9 +40,10 @@ class BasicBlock(nn.Module):
                             nn.init.uniform_(layer.bias, 0)
     
     def forward(self, x):
-        out = self.conv(x)
-        out = out + self.shortcut(x)
-        return F.leaky_relu(out)
+        out = self.conv(x) 
+        if self.shortcut!=None:
+            out += self.shortcut(x)
+        return self.activ(out)
     
     
 class ResNet(nn.Module):
@@ -79,21 +79,9 @@ class ResNet(nn.Module):
                         layer.init()
         print("Net Initialized")
     
-    def forward(self, x, epoch=1, window=300):
+    def forward(self, x):
         out = self.conv1(x)
-        
-        if epoch==-1:
-            CNN_plot(out, 1, window)
-
         out = self.reslayers(out)
-        
-        if epoch==-1:
-            CNN_plot(out, "res", window)
-
         out = self.conv2(out)
-                
-        if epoch==-1:
-            CNN_plot(out, -1, window)
-
         return out
     
