@@ -5,13 +5,10 @@ import os
 import numpy as np
 import torch 
 import torch.nn as nn
-import torch.utils.data as data
 import torch.nn.functional as F
 
 torch.manual_seed(42)
 np.random.seed(42)
-
-from tqdm import trange, tqdm
 
 
 class BasicBlock(nn.Module):
@@ -74,26 +71,14 @@ class ResNet(nn.Module):
             if isinstance(m, nn.Sequential):
                 for layer in m:
                     if isinstance(layer, nn.Conv3d):
-                        nn.init.kaiming_normal_(layer.weight, mode='fan_in')
+                        nn.init.kaiming_normal_(layer.weight, mode='fan_out')
                     if isinstance(layer, BasicBlock):
                         layer.init()
         print("Net Initialized")
     
     def forward(self, x, epoch=1, window=300):
         out = self.conv1(x)
-        
-        if epoch==-1:
-            CNN_plot(out, 1, window)
-
         out = self.reslayers(out)
-        
-        if epoch==-1:
-            CNN_plot(out, "res", window)
-
         out = self.conv2(out)
-                
-        if epoch==-1:
-            CNN_plot(out, -1, window)
-
         return out
     

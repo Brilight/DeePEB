@@ -80,7 +80,7 @@ class DeePEB(nn.Module):
         self.fn2 = nn.Sequential(nn.Linear(64, 1))
         
         self.usp = nn.Sequential(
-            nn.Upsample(scale_factor=(1,2,2), mode='trilinear',align_corners=True))      
+            nn.Upsample(scale_factor=(1,2,2), mode='trilinear',align_corners=False))      
         
         self.hf0 = nn.Sequential(
             nn.Conv3d(1, hf_channels, kernel_size=1, stride=1),
@@ -102,10 +102,10 @@ class DeePEB(nn.Module):
                       dilation=2, padding=2, padding_mode='replicate'))
         
         self.hf3 = nn.Sequential(
-            nn.Conv3d(1, 2, kernel_size=(1,5,5), stride=1, 
+            nn.Conv3d(1, 1, kernel_size=(1,5,5), stride=1, 
                       dilation=1, padding=(0,2,2), padding_mode='replicate'),
             nn.LeakyReLU(inplace=True),
-            nn.Conv3d(2, 1, kernel_size=(1,5,5), stride=1,
+            nn.Conv3d(1, 1, kernel_size=(1,5,5), stride=1,
                       dilation=1, padding=(0,2,2), padding_mode='replicate'))
         
     def initialize(self):
@@ -119,6 +119,7 @@ class DeePEB(nn.Module):
         print("Net Initialized")
         
     def forward(self, acd):
+        
         x = self.dsp(acd)
         x = x.permute(0, 2, 3, 4, 1)
         x = self.fn0(x)
@@ -129,9 +130,10 @@ class DeePEB(nn.Module):
             x = self.activation(x)
             
         x = self.fn1(x.permute(0, 2, 3, 4, 1))
-        x = self.activation(x)
+        #x = self.activation(x)
         x = self.fn2(x).permute(0, 4, 1, 2, 3)
         x = self.usp(x)
         x += self.hf0(acd) + self.hf1(acd) + self.hf2(acd) + self.hf3(acd)
+        
         return x
     
