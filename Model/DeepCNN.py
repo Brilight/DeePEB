@@ -10,8 +10,6 @@ import torch.nn.functional as F
 torch.manual_seed(42)
 np.random.seed(42)
 
-from tqdm import trange, tqdm
-
 
 class BasicBlock(nn.Module):
     
@@ -25,11 +23,11 @@ class BasicBlock(nn.Module):
             nn.Conv3d(out_channels, out_channels, kernel_size=kernel_size, stride=1, 
                       padding=int(kernel_size//2), padding_mode='replicate', bias=bias),)
         
-        self.shortcut = nn.Sequential(nn.Conv3d(in_channels, out_channels, kernel_size=1, padding_mode='replicate',
-                                     stride=1, bias=False),) if in_channels != out_channels else None
-        
-        self.activ = nn.LeakyReLU(inplace=True)
-        
+        self.shortcut = nn.Sequential()
+        if in_channels != out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv3d(in_channels, out_channels, kernel_size=1, stride=1, bias=False),)
+            
     def init(self):
         for m in self.children():
             if isinstance(m, nn.Sequential):
@@ -40,10 +38,9 @@ class BasicBlock(nn.Module):
                             nn.init.uniform_(layer.bias, 0)
     
     def forward(self, x):
-        out = self.conv(x) 
-        if self.shortcut!=None:
-            out += self.shortcut(x)
-        return self.activ(out)
+        out = self.conv(x)
+        out = out + self.shortcut(x)
+        return F.leaky_relu(out)
     
     
 class ResNet(nn.Module):
@@ -74,12 +71,12 @@ class ResNet(nn.Module):
             if isinstance(m, nn.Sequential):
                 for layer in m:
                     if isinstance(layer, nn.Conv3d):
-                        nn.init.kaiming_normal_(layer.weight, mode='fan_in')
+                        nn.init.kaiming_normal_(layer.weight, mode='fan_out')
                     if isinstance(layer, BasicBlock):
                         layer.init()
         print("Net Initialized")
     
-    def forward(self, x):
+    def forward(self, x, epoch=1, window=300):
         out = self.conv1(x)
         out = self.reslayers(out)
         out = self.conv2(out)

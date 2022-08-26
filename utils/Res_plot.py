@@ -33,8 +33,8 @@ def CNN_plot(Sample_values, layerlabel=-1, attention=1000):
     plt.rcParams['font.family'] = 'DejaVu Serif'
 
     plt.tick_params(labelsize=20)
-    
-    Sample_values = Sample_values.cpu().detach().numpy()
+    if type(Sample_values) is torch.Tensor:
+        Sample_values = Sample_values.cpu().detach().numpy()
     while len(Sample_values.shape)>2:
         Sample_values = np.sum(Sample_values,0)
     X = np.linspace(Resmin[0],Resmax[0],Sample_values.shape[0])
@@ -92,8 +92,11 @@ def hist_plot(A, B, title=None, hist_size=[40, 500, 500], figpath=None):
         plt.savefig(figpath+"{}-{}-hist.pdf".format(*title), dpi = 400)
     plt.show()
 
-    
+
 def log_plot(log1, log2, log3 = None, label = None, figpath=None):
+    if any(x in np.concatenate((log1, log2)) for x in [np.nan, np.inf]):
+        print("There exists nan or inf the log datas...")
+        return
     fig,ax1 = plt.subplots(figsize=(16,8))
     plt.rcParams['font.size'] = '20'
     plt.rcParams['font.family'] = 'DejaVu Serif'
@@ -102,11 +105,11 @@ def log_plot(log1, log2, log3 = None, label = None, figpath=None):
     plt.plot(X, log1, color='b', label=label[0])
     X = np.arange(log2.shape[0])*(log1.shape[0]-1)/(log2.shape[0]-1)
     plt.plot(X, log2, color='r', label=label[1])
-    plt.xticks(np.arange(0, log1.shape[0]//100*100, 100))
+    plt.xticks(np.linspace(0, log1.shape[0], 8)//50*50)
     plt.ylim([0.9*min(log1.min(),log2.min()),1.1*max(log1.max(),log2.max())])
     plt.yscale('log')
     ax1.set_ylabel("Loss",fontsize='25')
-    plt.legend(loc='upper right')
+    plt.legend(loc='upper left')
     if log3 is not None:
         ax2=ax1.twinx()
         X = np.arange(log3.shape[0])*(log1.shape[0]-1)/(log3.shape[0]-1)

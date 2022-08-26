@@ -22,7 +22,7 @@ class ConvBlock(nn.Module):
             nn.Conv3d(middle_channels, out_channels, kernel_size=3, padding=1, stride=1, bias=True),
             nn.LeakyReLU(inplace=True),)
     
-    def initialize(self):
+    def init(self):
         for m in self.children():
             if isinstance(m, nn.Sequential):
                 for layer in m:
@@ -72,7 +72,17 @@ class Generator(nn.Module):
                                            kernel_size=kernel_conv, padding=kernel_conv//2, output_padding=1)
         
         self.regular = nn.Upsample(size=self.Ihb_size, mode='trilinear', align_corners=False)
-        
+    
+    def initialize(self):
+        for layer in self.children():
+            if isinstance(layer, nn.ConvTranspose3d):
+                nn.init.kaiming_normal_(layer.weight, mode='fan_out')
+                if layer.bias is not None:
+                    nn.init.uniform_(layer.bias, 0)
+            if isinstance(layer, ConvBlock):
+                layer.init()
+        print("Net Initialized")
+    
     def forward(self, x):
 
         feature_1 = self.left_conv_1(x)        

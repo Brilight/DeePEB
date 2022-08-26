@@ -13,14 +13,14 @@ np.random.seed(42)
 
 from tqdm import trange, tqdm
 from utils.Save_and_load import save, load
-
+from utils.Res_plot import log_plot, CNN_plot
 
 def train(model, optimizer, scheduler, opt, dataset_train, device_train, 
-          dataset_test, res_trans, RDevelop, modelname, save_check=0.3, 
+          dataset_test, res_trans, modelname, save_check=15, 
           TotLoss = lambda pred,label: ((pred-label)**2).max()):
 
     np.set_printoptions(precision=5)
-    TotLoss = opt.Totloss if opt.Totloss is not None else TotLoss
+    TotLoss = opt.TotLoss if opt.TotLoss is not None else TotLoss
     lr_log, train_log, test_log = np.array([]), np.array([]), np.array([]).reshape(3,-1)
     
     for epoch in trange(opt.epochs):        
@@ -65,5 +65,7 @@ def train(model, optimizer, scheduler, opt, dataset_train, device_train,
                     "Test Error(Ihb): {:.2e}(MSE), {:.2f}%(NRMSE)\n".format(test_loss_mean, test_loss_nrmse)
                 print(info)
                 save(model, opt.modelpath, modelname, info)
-        
-    return model, train_log, test_log, lr_log 
+    
+    log_plot(train_log, test_log[0,...], lr_log, label = ['Train loss', 'Test loss', "Learning Rate"])
+    CNN_plot(ini.detach().cpu()); CNN_plot(s_pred); CNN_plot(s_label)
+    return train_log, test_log, lr_log 
