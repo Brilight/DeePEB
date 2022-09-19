@@ -14,16 +14,7 @@ np.set_printoptions(suppress=True, precision=3,
                     threshold=40, linewidth=100, edgeitems=20)  
 
 
-def Interp(cord, T_arr, t_dev):
-    l = min(10, (np.max(cord)-np.min(cord))/2)+0.1
-    Lefts = np.where(np.abs(cord-np.min(cord))<=l)
-    CD_left = np.interp(t_dev, T_arr[Lefts], cord[Lefts])
-    Rights = np.where(np.abs(cord-np.max(cord))<=l)
-    CD_right = np.interp(t_dev, T_arr[Rights], cord[Rights])
-    return CD_left, CD_right
-
-
-def CD_measure(resist, t_dev, height, scale, direc, Resmax, Full_size, thres_min=1):
+def CD_measure(resist, t_dev, height, scale, direc, Resmax, Full_size, resolution=5, cd_min=1, cd_max=50):
     """
     resist.size = Full_size, in the z,y,x direction
     Resmax is the geometric shape size
@@ -34,7 +25,7 @@ def CD_measure(resist, t_dev, height, scale, direc, Resmax, Full_size, thres_min
     Values = np.swapaxes(resist[height,...], 0, 1) if direc=='X' else resist[height,...]
     Values_new = F.interpolate(torch.Tensor(Values).reshape(1,1,Full_size[1],Full_size[2]), scale_factor=(scale, scale),
                            mode='bicubic', align_corners=True).detach().numpy().squeeze().reshape(scale*Full_size[1],-1)
-    idx_contact = np.where((0.9*t_dev<=Values_new) & (Values_new<=1.1*t_dev))
+    idx_contact = np.where((Values_new>=0.5*t_dev)&(Values_new<=1.5*t_dev))
     if len(idx_contact[0])<=1:
         return np.array([[0,0,0],])
     Contact_pos, Contact_val = Pos[idx_contact], Values_new[idx_contact]
@@ -44,13 +35,18 @@ def CD_measure(resist, t_dev, height, scale, direc, Resmax, Full_size, thres_min
     Keys, flag = [], [0,0]
     for y_cord in Y_fix:
         line = np.where(Contact_pos[...,1]==y_cord)
-        X_cords, t_arr = Contact_pos[line][...,0], Contact_val[line]
-        while X_cords.shape[0]>0:
-            idx = np.where(X_cords-np.min(X_cords)<=40)
-            X_cord_new, T_new = X_cords[idx], t_arr[idx]
-            X_cords = X_cords[idx[0][-1]+1:]
-            left, right = Interp(X_cord_new, T_new, t_dev)
-            i_key, insert, key = 0, False if right<=left+thres_min else True, [left, y_cord, right-left]
+        X_cords, T_arr = Contact_pos[line][...,0], Contact_val[line]
+        X_new = F.interpolate(torch.Tensor(X_cords).reshape(1,1,X_cords.shape[0]), scale_factor=resolution,
+                             mode='linear').numpy().squeeze()
+        T_new = F.interpolate(torch.Tensor(T_arr).reshape(1,1,T_arr.shape[0]), scale_factor=resolution,
+                             mode='linear').numpy().squeeze()
+        T_diff = T_new - t_dev
+        thre_cord = np.where(T_diff[:-1]*T_diff[1:]<=0)[0]
+        while thre_cord.shape[0]>1:
+            #print("{} changing points for {}".format(thre_cord.shape, y_cord))
+            left, right = X_new[thre_cord[0]], X_new[thre_cord[1]]
+            thre_cord = thre_cord[2:]
+            i_key, insert, key = 0, True if cd_max>right-left>cd_min else False, [left, y_cord, right-left]
             
             while i_key<len(Keys) and insert:
                 cd_key = Keys[i_key]
@@ -63,9 +59,9 @@ def CD_measure(resist, t_dev, height, scale, direc, Resmax, Full_size, thres_min
                 i_key +=1
             if flag in Keys:
                 Keys.remove(flag)
-            if insert or len(Keys)==0:
+            if insert:
                 Keys.append(key)
-    
+            #print("\n",*Keys,sep="\n")
     Keys = np.array(Keys) if direc=='X' else np.array(Keys)[:, [1,0,2]]
     return Keys
 
