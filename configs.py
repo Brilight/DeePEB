@@ -57,9 +57,8 @@ class DefaultConfig(object):
     
     t_dev, Heights, scale = 60, np.arange(10)*8, 10
     dataidx_eval = np.arange(20)+80
-    CD_seeds = 29
+    CD_seeds = 49
 
-    
 def parse(self,kwargs):
     '''
     Update config with kwargs
