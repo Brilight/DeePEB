@@ -31,12 +31,6 @@ from utils.Save_and_load import save, load
 from Train.train_v1 import train
 from Test.Evaluate import evaluate
 
-Resmin, Resmax = [-1000,-1000,0], [80,1000,1000]
-masktest = 80
-h, k_c, c_sat, D_norm, t_f = 0.027, 0.9, 0.9, 70*70/2/90, 90
-datapath, modelpath = opt.datapath, opt.modelpath
-ckptpath = modelpath+"DeePEB_v1.pth"
-
 
 def Model_def(mode_xy, mode_z, channels, layers, hf_channels, ckptpath=None):
     model = DeePEB([device0, device1], mode_z, mode_xy, mode_xy, channels, layers, hf_channels)
@@ -56,7 +50,27 @@ channels = 25
 layers = 1
 hf_channels = 10
 batch_size = 30
+ckptpath = opt.modelpath+"DeePEB_v1.pth"
 model = Model_def(mode_xy, mode_z, channels, layers, hf_channels, ckptpath)
+
+dataset_train = dataset_append(opt, opt.dataidx_train, res_trans)
+dataset_test = dataset_append(opt, opt.dataidx_test, res_trans) 
+
+
+def opt_strategy(model):
+    LR = 1e-2
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR,)# weight_decay=1e-4)
+    #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=50, eta_min=1e-5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.7)
+    return optimizer, scheduler
+
+
+TotLoss = lambda pred,label: ((pred-label)**2).max()
+optimizer, scheduler = opt_strategy(model)
+train_log, test_log, lr_log = train(model, optimizer, scheduler, opt, dataset_train, device_train,
+                                           dataset_test, res_trans, ckpt_name, TotLoss=TotLoss)
+if not os.path.exists(opt.load_model_path):
+    save(model, opt.modelpath, ckpt_name)
 
 Runtime, RMSE, NMSE, _, CD_err_x, CD_err_y, CD_RMSE = evaluate(opt, model, device0, res_trans, RDevelop)
 print("Mean runtime:", np.mean(Runtime))
