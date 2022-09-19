@@ -53,7 +53,7 @@ class DefaultConfig(object):
     print_freq = 20 # print info every N batch
     len_test = 3
     TotLoss = None
-    epochs = 500
+    epochs = 1000
     
     t_dev, Heights, scale = 60, np.arange(10)*8, 10
     dataidx_eval = np.arange(20)+80
