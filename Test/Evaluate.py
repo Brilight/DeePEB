@@ -75,14 +75,16 @@ def evaluate(opt, model, device, res_trans, RDevelop,
         print("NMSE for label {}:".format(mask_idx), NMSE[:,mask_idx])
         print("NMSE_height for label {}:".format(mask_idx), np.mean(NMSE_height,axis=-1)[:,mask_idx])
         
-        pred = np.array(F.interpolate(torch.Tensor(pred).reshape(1,1,*Resmax), size=CD_size, 
-                                      mode='trilinear', align_corners=False,)).squeeze().transpose(2,1,0)
+        pred = F.interpolate(torch.Tensor(pred).reshape(1,1,*Resmax), size=CD_size, 
+                                      mode='trilinear', align_corners=False,).numpy()
+        pred = pred.squeeze().transpose(2,1,0)
         T_pred = CD_scale*Dev(pred, opt.CD_seeds).transpose(2,1,0)
         T_pred = np.array(F.interpolate(torch.Tensor(T_pred).reshape(1,1,*CD_size), size=Full_size, 
                                       mode='trilinear', align_corners=False,)).squeeze()
         
-        label = np.array(F.interpolate(torch.Tensor(label).reshape(1,1,*Resmax), size=CD_size, 
-                                       mode='trilinear', align_corners=False,)).squeeze().transpose(2,1,0)
+        label = F.interpolate(torch.Tensor(label).reshape(1,1,*Resmax), size=CD_size, 
+                                       mode='trilinear', align_corners=False).numpy()
+        label = label.squeeze().transpose(2,1,0)
         T_label = CD_scale*Dev(label, opt.CD_seeds).transpose(2,1,0)
         T_label = np.array(F.interpolate(torch.Tensor(T_label).reshape(1,1,*CD_size), size=Full_size, 
                                        mode='trilinear', align_corners=False,)).squeeze()
@@ -94,17 +96,11 @@ def evaluate(opt, model, device, res_trans, RDevelop,
             CD_x_pred = CD_measure(T_pred, t_dev, height, scale, 'X', Resmax, Full_size)
             CD_y_pred = CD_measure(T_pred, t_dev, height, scale, 'Y', Resmax, Full_size)
 
-            if CD_x_label.shape[0]>=CD_x_pred.shape[0]:
-                Tmp = -CD_Error(CD_x_label, CD_x_pred, str(height)+"-CD_x_label")
-            else:
-                Tmp = CD_Error(CD_x_pred, CD_x_label, str(height)+"-CD_x_pred")
+            Tmp = -CD_Error(CD_x_label, CD_x_pred, str(height)+"-CD_x_label")
             print("CD_x error at height {}:\n".format(height), Tmp)
             CD_err_x[mask_idx].extend(list(Tmp))
 
-            if CD_y_label.shape[0]>=CD_y_pred.shape[0]:
-                Tmp = -CD_Error(CD_y_label, CD_y_pred, str(height)+"-CD_y_label")
-            else:
-                Tmp = CD_Error(CD_y_pred, CD_y_label, str(height)+"-CD_y_pred")
+            Tmp = -CD_Error(CD_y_label, CD_y_pred, str(height)+"-CD_y_label")
             print("CD_y error at height {}:\n".format(height), Tmp)
             CD_err_y[mask_idx].extend(list(Tmp))
 

@@ -7,11 +7,10 @@ import torch
 import torch.nn as nn
 import torch.utils.data as data
 import torch.nn.functional as F
-from torch.utils.checkpoint import checkpoint as ckpt
 from functools import partial
 
-torch.manual_seed(3407)
-np.random.seed(3407)
+torch.manual_seed(42)
+np.random.seed(42)
 
 from tqdm import trange, tqdm
 
@@ -58,7 +57,7 @@ class SpectralConv3d(nn.Module):
         del out_fft; torch.cuda.empty_cache()
         return x
     
-    
+
 class DeePEB(nn.Module):
     def __init__(self, devices, modes1, modes2, modes3, channels, layers, hf_channels):
         super(DeePEB, self).__init__()
@@ -74,8 +73,7 @@ class DeePEB(nn.Module):
         
         self.activation = nn.LeakyReLU(inplace=True)
         
-        self.conv1 = SpectralConv3d(self.channels, self.channels, 
-                                    self.modes1, self.modes2, self.modes3).to(self.device0)
+        self.conv1 = SpectralConv3d(self.channels, self.channels, self.modes1, self.modes2, self.modes3).to(self.device0)
         
         self.w1 = nn.Sequential(nn.Conv3d(self.channels, self.channels, kernel_size=1, stride=1,)).to(self.device0)
         
@@ -139,4 +137,3 @@ class DeePEB(nn.Module):
         torch.cuda.empty_cache()
         x += self.hf0(acd) + self.hf1(acd) + self.hf2(acd) + self.hf3(acd)
         return x
-    

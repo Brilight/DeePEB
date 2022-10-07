@@ -53,9 +53,9 @@ class DefaultConfig(object):
     print_freq = 20 # print info every N batch
     len_test = 3
     TotLoss = None
-    epochs = 1000
+    epochs = 500
     
-    t_dev, Heights, scale = 60, np.arange(10)*8, 10
+    t_dev, Heights, scale = 60, np.arange(10)*8, 20
     dataidx_eval = np.arange(20)+80
     CD_seeds = 49
 

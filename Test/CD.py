@@ -65,20 +65,20 @@ def CD_measure(resist, t_dev, height, scale, direc, Resmax, Full_size, resolutio
     Keys = np.array(Keys) if direc=='X' else np.array(Keys)[:, [1,0,2]]
     return Keys
 
-
-def CD_Error(CD1, CD2, Long): #len(CD1)>=len(CD2)
-    Flag = np.ones(len(CD1))
-    CD_Err = np.zeros(len(CD1))
-    for idx1 in range(len(CD1)):
+def CD_Error(CD_label, CD_pred, Long):
+    Flag = np.ones(len(CD_label))
+    CD_Err = np.zeros(len(CD_label))
+    for idx1 in range(len(CD_label)):
         idx2 = 0
-        while idx2<len(CD2) and Flag[idx1]:
-            if ((CD1[idx1,0]-CD2[idx2,0])**2+(CD1[idx1,1]-CD2[idx2,1])**2)**0.5<=((CD1[idx1,2]+CD2[idx2,2])/2)**2**0.5:
-                CD_Err[idx1] = CD1[idx1,2]-CD2[idx2,2]
+        while idx2<len(CD_pred) and Flag[idx1]:
+            if ((CD_label[idx1, 0]-CD_pred[idx2, 0])**2+
+                (CD_label[idx1, 1]-CD_pred[idx2, 1])**2)**0.5<=(CD_label[idx1, 2]+CD_pred[idx2, 2]):
+                CD_Err[idx1] = CD_label[idx1, 2] - CD_pred[idx2, 2]
                 Flag[idx1] = 0
             idx2+=1
         if Flag[idx1]:
-            print("Contact {} in {} is redundant, with info {}".format(idx1, Long, CD1[idx1,:]))
-            CD_Err[idx1] = CD1[idx1,2]
+            print("Contact {} in {} is redundant, with info {}".format(idx1, Long, CD_label[idx1,:]))
+            CD_Err[idx1] = CD_label[idx1, 2]
     return CD_Err
 
 
@@ -103,17 +103,11 @@ def CD_eval(opt):
             CD_x_pred = CD_measure(resist_pred, t_dev, height, scale, 'X', Resmax, Full_size)
             CD_y_pred = CD_measure(resist_pred, t_dev, height, scale, 'Y', Resmax, Full_size)
 
-            if CD_x_label.shape[0]>=CD_x_pred.shape[0]:
-                Tmp = -CD_Error(CD_x_label, CD_x_pred, str(height)+"-CD_x_label")
-            else:
-                Tmp = CD_Error(CD_x_pred, CD_x_label, str(height)+"-CD_x_pred")
+            Tmp = -CD_Error(CD_x_label, CD_x_pred, str(height)+"-CD_x_label")
             print("CD_x error at height {}:\n".format(height), Tmp, file=f)
             CD_err_x[mask_idx].extend(list(Tmp))
 
-            if CD_y_label.shape[0]>=CD_y_pred.shape[0]:
-                Tmp = -CD_Error(CD_y_label, CD_y_pred, str(height)+"-CD_y_label")
-            else:
-                Tmp = CD_Error(CD_y_pred, CD_y_label, str(height)+"-CD_y_pred")
+            Tmp = -CD_Error(CD_y_label, CD_y_pred, str(height)+"-CD_y_label")
             print("CD_y error at height {}:\n".format(height), Tmp, file=f)
             CD_err_y[mask_idx].extend(list(Tmp))
         
