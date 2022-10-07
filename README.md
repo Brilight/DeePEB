@@ -1,6 +1,6 @@
 # DeePEB
 
-#### Intro
+### Intro
 
 PEB simulation acts as the bridge between the aerial image and the final resist profile in lithography simulation. To accelerate the PEB simulation without sacrificing accuracy, we propose DeePEB, a neural PDE solver. 
 
@@ -8,9 +8,9 @@ We construct DeePEB based on the observation of the physical essence of PEB: mos
 
 This repo provides the source code of DeePEB, created by Qipan on 2022.1.18, project set up on 2021.9.
 
-For some privacy and copyright concerns, we only provide one test data; more training and test data are accessible upon proper requirements.
+For some privacy and copyright concerns, the dataset and trained models are partially provided; more training and test data are accessible upon proper requirements.
 
-Detailed algorithms and details can be found in our paper, which can be cited as:
+Detailed algorithms and details can be found in our [paper](https://github.com/Brilight/DeePEB/blob/main/ICCAD2022-468-DeePEB.pdf), which can be cited as (going to update):
 
 
 
@@ -18,16 +18,16 @@ Detailed algorithms and details can be found in our paper, which can be cited as
 
 0. Python >3.5
 
-1. Pytorch>=1.8.0 [With CUDA>11.0]
+1. Pytorch>=1.9.0 [CUDA > 11.0]
 
 2. Numpy
 
 3. tqdm
 
-4. Other common packages in python, including csv, os, math, importlib, etc. 
+4. Other common packages in python, including csv, os, math, matplotlib, etc. 
 
 
-#### Usage
+### Usage
 
 1. 
 Just run the jupyter notebook with proper data form: 3d array in the zyx form
