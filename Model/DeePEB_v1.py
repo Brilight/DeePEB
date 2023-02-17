@@ -116,7 +116,7 @@ class DeePEB(nn.Module):
                     if isinstance(layer, (nn.Linear, nn.Conv3d, nn.ConvTranspose3d)):
                         nn.init.kaiming_normal_(layer.weight, mode='fan_out')
                         if layer.bias is not None:
-                            nn.init.uniform_(layer.bias, 0)
+                            nn.init.constant_(layer.bias, 0)
         print("Net Initialized")
         
     def forward(self, acd):
