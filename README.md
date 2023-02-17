@@ -11,11 +11,17 @@ This repo provides the source code of DeePEB, created by Qipan on 2022.1.18, pro
 For some privacy and copyright concerns, the dataset and trained models are partially provided; more training and test data are accessible upon proper requirements.
 
 Detailed algorithms and details can be found in our [paper](https://github.com/Brilight/DeePEB/blob/main/ICCAD2022-468-DeePEB.pdf), which can be cited as:
+
 @inproceedings{wang2022deepeb,
+
   title={DeePEB: A Neural Partial Differential Equation Solver for Post Exposure Baking Simulation in Lithography},
+  
   author={Wang, Qipan and Gao, Xiaohan and Lin, Yibo and Wang, Runsheng and Huang, Ru},
+  
   booktitle={Proceedings of the 41st IEEE/ACM International Conference on Computer-Aided Design},
+  
   pages={1--9},
+  
   year={2022}
 }
 
